@@ -44,7 +44,6 @@ binary_sensor:
       inverted: yes
       mode: INPUT_PULLUP
     name: "Momentary Left"
-#    id: vol_dn
     on_press:
       then:
         - if:
@@ -65,7 +64,6 @@ binary_sensor:
       inverted: yes
       mode: INPUT_PULLUP
     name: "Momentary Right"
-#    id: vol_up
     on_press:
       then:
         - if:
@@ -87,7 +85,6 @@ binary_sensor:
       inverted: yes
       mode: INPUT_PULLUP
     name: "Toggle Switch Left"
-#    id: med_lt
     on_press:
       then:
         - script.execute: plex_pause
@@ -102,11 +99,8 @@ binary_sensor:
       inverted: yes
       mode: INPUT_PULLUP
     name: "Toggle Switch Right"
-#    id: med_rt
     on_press:
       then:
-        - lambda: 'id(vol_lvl) = 42;'
-        - script.execute: plex_volume
         - script.execute: plex_next
         - script.execute: plex_pause
     on_release:
