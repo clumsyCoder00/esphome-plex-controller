@@ -1,0 +1,145 @@
+# ---- TODO ----
+
+# --------------
+
+# B4:FB:E4:41:FE:1D
+# 10.0.1.61
+esphome:
+  name: stim-buttons
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: true
+
+wifi:
+  ssid: 'ssid'
+  password: 'password'
+  
+# api:
+
+logger:
+#  level: VERBOSE
+#  logs:
+#    text_sensor: INFO
+#    http_request: VERBOSE
+    
+ota:
+
+web_server:
+
+# https://esphome.io/guides/automations.html?highlight=global#global-variables
+globals:
+  - id: vol_lvl
+    type: int
+    restore_value: yes
+    initial_value: '0'
+
+# https://esphome.io/components/http_request.html
+http_request:
+
+# https://esphome.io/components/binary_sensor/index.html#
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: D1
+      inverted: yes
+      mode: INPUT_PULLUP
+    name: "Momentary Left"
+#    id: vol_dn
+    on_press:
+      then:
+        - if:
+            condition:
+              - lambda: 'return id(vol_lvl) > 0;'
+            then:
+              - lambda: 'id(vol_lvl) = id(vol_lvl) - 1;'
+        - script.execute: plex_volume
+    filters:
+      - autorepeat:
+        - delay: 250ms
+          time_off: 20ms
+          time_on: 1ms
+
+  - platform: gpio
+    pin:
+      number: D2
+      inverted: yes
+      mode: INPUT_PULLUP
+    name: "Momentary Right"
+#    id: vol_up
+    on_press:
+      then:
+        - if:
+            condition:
+              - lambda: 'return id(vol_lvl) < 100;'
+            then:
+              - lambda: 'id(vol_lvl) = id(vol_lvl) + 1;'
+        - script.execute: plex_volume
+    filters:
+      - autorepeat:
+        - delay: 250ms
+          time_off: 95ms
+          time_on: 1ms
+
+  - platform: gpio
+    internal: true
+    pin:
+      number: D3
+      inverted: yes
+      mode: INPUT_PULLUP
+    name: "Toggle Switch Left"
+#    id: med_lt
+    on_press:
+      then:
+        - script.execute: plex_pause
+    on_release:
+      then:
+        - script.execute: plex_play
+
+  - platform: gpio
+    internal: true
+    pin:
+      number: D4
+      inverted: yes
+      mode: INPUT_PULLUP
+    name: "Toggle Switch Right"
+#    id: med_rt
+    on_press:
+      then:
+        - lambda: 'id(vol_lvl) = 42;'
+        - script.execute: plex_volume
+        - script.execute: plex_next
+        - script.execute: plex_pause
+    on_release:
+      then:
+        - script.execute: plex_play
+
+# https://github.com/Arcanemagus/plex-api/wiki
+script:
+  - id: plex_pause
+    then:
+    - http_request.post:
+        url: http://server_ip_address:32400/player/playback/pause?type=music&commandID=1
+        headers:
+          X-Plex-Target-Client-Identifier: target_client_Identifier
+
+  - id: plex_play
+    then:
+    - http_request.post:
+        url: http://server_ip_address:32400/player/playback/play?type=music&commandID=1
+        headers:
+          X-Plex-Target-Client-Identifier: target_client_Identifier
+
+  - id: plex_next
+    then:
+    - http_request.post:
+        url: http://server_ip_address:32400/player/playback/skipNext?type=music&commandID=1
+        headers:
+          X-Plex-Target-Client-Identifier: target_client_Identifier
+
+  - id: plex_volume
+    then:
+    - http_request.post:
+        url: !lambda |-
+          return ((std::string) "http://server_ip_address:32400/player/playback/setParameters?type=music&volume=" + to_string(id(vol_lvl)) + "&repeat=1&commandID=1").c_str();
+        headers:
+          X-Plex-Target-Client-Identifier: target_client_Identifier
