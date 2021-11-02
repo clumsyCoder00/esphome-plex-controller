@@ -5,7 +5,7 @@
 # B4:FB:E4:41:FE:1D
 # 10.0.1.61
 esphome:
-  name: stim-buttons
+  name: plex-buttons
   platform: ESP8266
   board: d1_mini
   esp8266_restore_from_flash: true
